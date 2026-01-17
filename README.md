@@ -7,13 +7,27 @@
 
 > **Objectif**: Prédire le risque de décès pour des patients atteints de leucémie myéloïde en utilisant des données cliniques et moléculaires.
 
+## 🏆 Résultats Actuels
+
+| Modèle | IPCW C-index | Status |
+|--------|--------------|--------|
+| **Gradient Boosting Survival** | **0.7111** | ✅ Meilleur modèle |
+| Random Survival Forest | 0.7040 | ✅ Testé |
+| Baseline (Ridge) | 0.6537 | ✅ Référence |
+| KMeans Clustering | 0.6182 | ✅ Testé |
+| Challenge Winner | 0.7744 | 🎯 Objectif |
+
+> **Gap à combler**: -0.063 (~6%) pour atteindre le score du winner
+
 ## 📋 Table des Matières
 
+- [Résultats Actuels](#-résultats-actuels)
 - [Installation Rapide](#-installation-rapide)
 - [Utilisation](#-utilisation)
 - [Structure du Projet](#-structure-du-projet)
 - [Méthodologie](#-méthodologie)
-- [Résultats](#-résultats)
+- [Modèles Implémentés](#-modèles-implémentés)
+- [Expériences en Cours](#-expériences-en-cours)
 - [Historique des Modifications](#-historique-des-modifications)
 
 ---
@@ -56,26 +70,40 @@ pip install -r requirements.txt
 
 ## 💻 Utilisation
 
-### Option 1: Exécuter le rapport complet
+### Option 1: Voir le rapport final
 
 ```bash
-# Ouvrir le notebook principal (rapport)
+# Ouvrir le notebook principal (résultats documentés)
 jupyter notebook main.ipynb
 ```
 
 Ce notebook contient:
-- Analyse exploratoire complète
-- Tous les modèles (baseline, clustering, RSF)
-- Visualisations et interprétations
-- Génération du fichier de soumission
+- ✅ Analyse exploratoire complète
+- ✅ Tous les modèles testés (Baseline → GBSA)
+- ✅ Visualisations et interprétations
+- ✅ Génération du fichier de soumission
 
-### Option 2: Utiliser les modules Python
+### Option 2: Tester des améliorations
+
+```bash
+# Ouvrir le notebook d'expérimentation
+jupyter notebook experiments.ipynb
+```
+
+Ce notebook contient:
+- 🧪 Tests d'ensemble RSF + GBSA
+- 🧪 Tuning GBSA avec grid search étendu
+- 🧪 Tests avec plus de features génétiques
+- 🧪 Features de co-mutations
+
+### Option 3: Utiliser les modules Python
 
 ```python
 from src.data_loader import load_all_data
 from src.features import build_molecular_features
 from src.models import create_rsf_model
 from src.evaluation import ipcw_cindex
+from sksurv.ensemble import GradientBoostingSurvivalAnalysis
 
 # Charger les données
 clinical_train, clinical_test, molecular_train, molecular_test, y_train = load_all_data()
@@ -83,12 +111,11 @@ clinical_train, clinical_test, molecular_train, molecular_test, y_train = load_a
 # Feature engineering
 mol_features = build_molecular_features(molecular_train)
 
-# Créer et entraîner un modèle
-model = create_rsf_model({"n_estimators": 400})
-# ...
+# Meilleur modèle : Gradient Boosting Survival
+gbsa = GradientBoostingSurvivalAnalysis(n_estimators=200, learning_rate=0.1, max_depth=3)
 ```
 
-### Option 3: Notebook de développement
+### Option 4: Notebook de développement (legacy)
 
 ```bash
 # Pour le notebook de développement détaillé
@@ -137,14 +164,23 @@ QRT-Leukemia-DataChallenge/
 │   ├── optimization.py             # Fonctions Numba optimisées
 │   └── visualization.py            # Graphiques et visualisations
 │
-├── 📓 main.ipynb                   # Rapport principal (à soumettre)
-├── 📓 DataChallenge_ML.ipynb       # Notebook de développement
+├── 📓 main.ipynb                   # Rapport principal (résultats finaux)
+├── 📓 experiments.ipynb            # Notebook d'expérimentation (tests avancés)
+├── 📓 DataChallenge_ML.ipynb       # Notebook de développement (legacy)
 ├── 📓 Benchmark_nqBJ7fO.ipynb      # Benchmark fourni par QRT
 │
 ├── 📄 requirements.txt             # Dépendances Python
 ├── 📄 submission.csv               # Fichier de soumission
 └── 📄 README.md                    # Ce fichier
 ```
+
+### Notebooks
+
+| Notebook | Description | Quand l'utiliser |
+|----------|-------------|------------------|
+| **main.ipynb** | Rapport final documenté avec tous les résultats | Voir les résultats finaux, générer la soumission |
+| **experiments.ipynb** | Tests d'amélioration (ensemble, tuning, etc.) | Tester de nouvelles idées |
+| DataChallenge_ML.ipynb | Notebook original de développement | Référence historique |
 
 ### Description des modules `src/`
 
@@ -186,37 +222,149 @@ QRT-Leukemia-DataChallenge/
 
 ### Modèles implémentés
 
-1. **Baseline (Ridge Regression)**: Régression sur OS_YEARS, ignore la censure
-2. **KMeans Clustering**: Non-supervisé, risque par médiane de cluster
-3. **Random Survival Forest**: Gère la censure, hyperparamètres optimisés
+1. **Baseline (Ridge Regression)**: Régression sur OS_YEARS, ignore la censure → **0.6537**
+2. **KMeans Clustering**: Non-supervisé, risque par médiane de cluster → **0.6182**
+3. **Random Survival Forest**: Gère la censure, hyperparamètres optimisés → **0.7040**
+4. **Gradient Boosting Survival**: Meilleur modèle actuel → **0.7111** ✅
 
 ### Métrique
 
-**IPCW C-index** (τ = 7 ans): Mesure la capacité à ordonner correctement les paires de patients selon leur survie.
+**IPCW C-index** (τ = 7 ans): Mesure la capacité à ordonner correctement les paires de patients selon leur survie, en tenant compte de la censure à droite.
+
+$$C = \frac{\text{Paires Concordantes}}{\text{Paires Comparables}}$$
+
+- **C = 1**: Classement parfait
+- **C = 0.5**: Modèle aléatoire
 
 ---
 
-## 📈 Résultats
+## 🧪 Modèles Implémentés
 
-| Modèle | IPCW C-index (validation) |
-|--------|---------------------------|
-| Baseline (Ridge) | ~0.64 |
-| KMeans Clustering | ~0.62 |
-| **Random Survival Forest** | **~0.70** |
+### 1. Baseline Ridge Regression (0.6537)
+
+Régression linéaire régularisée sur `OS_YEARS`. Simple mais **ignore la censure** (patients encore en vie traités comme décédés).
+
+```python
+from src.models import BaselineRiskModel
+baseline = BaselineRiskModel(preprocessor=preprocess, alpha=1.0)
+```
+
+### 2. KMeans Clustering (0.6182)
+
+Approche non-supervisée : cluster les patients, puis assigne un risque basé sur la survie médiane de chaque cluster.
+
+```python
+from src.models import ClusteringRiskModel
+cluster_model = ClusteringRiskModel(preprocessor=preprocess, n_clusters=5)
+```
+
+### 3. Random Survival Forest (0.7040)
+
+Forêt aléatoire adaptée à l'analyse de survie. Gère correctement la **censure à droite**.
+
+**Hyperparamètres optimisés :**
+- `n_estimators`: 200-300
+- `min_samples_leaf`: 10-20
+- `max_features`: 0.5
+
+```python
+from sksurv.ensemble import RandomSurvivalForest
+rsf = RandomSurvivalForest(n_estimators=200, min_samples_leaf=20, random_state=42)
+```
+
+### 4. Gradient Boosting Survival ⭐ (0.7111)
+
+**Meilleur modèle actuel.** Gradient boosting adapté à la survie, souvent meilleur que RSF.
+
+**Hyperparamètres :**
+- `n_estimators`: 200
+- `learning_rate`: 0.1
+- `max_depth`: 3
+
+```python
+from sksurv.ensemble import GradientBoostingSurvivalAnalysis
+gbsa = GradientBoostingSurvivalAnalysis(n_estimators=200, learning_rate=0.1, max_depth=3)
+```
+
+---
+
+## 🔬 Expériences en Cours
+
+Voir **experiments.ipynb** pour les tests d'amélioration.
+
+### Expériences déjà implémentées
+
+| # | Expérience | Description | Status |
+|---|------------|-------------|--------|
+| 1 | Ensemble RSF + GBSA | Moyenne pondérée des deux modèles | 🧪 À tester |
+| 2 | GBSA Tuning | Grid search plus large (n_estimators, learning_rate, max_depth) | 🧪 À tester |
+| 3 | Plus de gènes | Augmenter TOP_GENES de 30 à 50 | 🧪 À tester |
+| 4 | Co-mutations | Features d'interaction gène-gène (ex: TP53 + RUNX1) | 🧪 À tester |
+
+### Idées à explorer
+
+- [ ] **CoxPH avec ElasticNet** — Modèle de Cox régularisé
+- [ ] **Parser CYTOGENETICS** — Extraire del(5q), -7, complex karyotype
+- [ ] **Stacking** — Meta-learner sur les prédictions des modèles
+- [ ] **XGBoost AFT** — Accelerated Failure Time avec XGBoost
+- [ ] **DeepSurv** — Réseau de neurones pour la survie
+
+---
+
+## 📈 Résultats Détaillés
+
+| Modèle | IPCW C-index | Gap vs Winner | Commentaire |
+|--------|--------------|---------------|-------------|
+| **Gradient Boosting Surv** | **0.7111** | -0.063 | ✅ Meilleur modèle |
+| Random Survival Forest | 0.7040 | -0.070 | Bon modèle de survie |
+| Baseline (Ridge) | 0.6537 | -0.121 | Ignore la censure |
+| KMeans Clustering | 0.6182 | -0.156 | Non-supervisé |
+| Challenge Winner | 0.7744 | — | 🎯 Objectif |
+
+### Progression des scores
+
+```
+Baseline      ████████████████████████████░░░░░░░░░░  0.6537
+KMeans        ████████████████████████░░░░░░░░░░░░░░  0.6182
+RSF           ████████████████████████████████░░░░░░  0.7040
+GBSA          █████████████████████████████████░░░░░  0.7111 ← Actuel
+Winner        ████████████████████████████████████░░  0.7744 ← Objectif
+```
 
 ### Features les plus importantes
 
-1. `BM_BLAST` (blastes moelle osseuse)
-2. `PLT` (plaquettes)
-3. `HB` (hémoglobine)
-4. `n_mut` (nombre de mutations)
-5. `vaf_mean` (VAF moyen)
+| Rang | Feature | Description | Impact |
+|------|---------|-------------|--------|
+| 1 | `BM_BLAST` | Blastes moelle osseuse (%) | Très élevé |
+| 2 | `PLT` | Plaquettes (Giga/L) | Élevé |
+| 3 | `HB` | Hémoglobine (g/dL) | Élevé |
+| 4 | `n_mut` | Nombre total de mutations | Modéré |
+| 5 | `vaf_mean` | VAF moyen des mutations | Modéré |
+| 6 | `WBC` | Globules blancs (Giga/L) | Modéré |
+| 7 | `GENE__TP53` | Mutation TP53 (binaire) | Cliniquement important |
 
 ---
 
 ## 📝 Historique des Modifications
 
-### Version 2.0 (Actuelle) — Restructuration complète
+### Version 2.1 (Janvier 2026) — Gradient Boosting + Expériences
+
+#### Nouveautés
+
+- ✅ **Gradient Boosting Survival** — Nouveau meilleur modèle (0.7111 vs 0.7040 RSF)
+- ✅ **experiments.ipynb** — Notebook dédié aux expériences
+- ✅ **Optimisation Grid Search** — Réduction de 72 à 16 fits, mode fast
+- ✅ **Fix alignement colonnes** — Correction du bug KeyError sur test set
+
+#### Scores atteints
+
+| Étape | Score | Amélioration |
+|-------|-------|--------------|
+| v1 Baseline | 0.6537 | — |
+| v2 RSF | 0.7040 | +0.050 |
+| v2.1 GBSA | **0.7111** | +0.007 |
+
+### Version 2.0 — Restructuration complète
 
 #### Changements majeurs
 
@@ -321,7 +469,18 @@ Les cellules de debugging suivantes ont été retirées:
 - [scikit-survival Documentation](https://scikit-survival.readthedocs.io/)
 - [IPCW C-index](https://scikit-survival.readthedocs.io/en/stable/api/generated/sksurv.metrics.concordance_index_ipcw.html)
 - [Random Survival Forests](https://arxiv.org/abs/0811.1645)
+- [Gradient Boosting Survival](https://scikit-survival.readthedocs.io/en/stable/api/generated/sksurv.ensemble.GradientBoostingSurvivalAnalysis.html)
 - [Cox Proportional Hazards](https://en.wikipedia.org/wiki/Proportional_hazards_model)
+
+---
+
+## 🤝 Contribution
+
+Pour contribuer au projet :
+
+1. Ouvrir `experiments.ipynb` et tester une nouvelle idée
+2. Si le score s'améliore, reporter les résultats dans `main.ipynb`
+3. Mettre à jour ce README avec les nouveaux scores
 
 ---
 
@@ -333,5 +492,6 @@ Ce projet est développé dans le cadre du QRT Data Challenge 2024 en partenaria
 
 <p align="center">
   <b>QRT Data Challenge 2024</b><br>
-  En partenariat avec l'Institut Gustave Roussy
+  En partenariat avec l'Institut Gustave Roussy<br><br>
+  <i>Score actuel : 0.7111 | Objectif : 0.7744</i>
 </p>
