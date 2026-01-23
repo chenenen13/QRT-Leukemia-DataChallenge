@@ -11,13 +11,14 @@
 
 | Modèle | IPCW C-index | Status |
 |--------|--------------|--------|
-| **Gradient Boosting Survival** | **0.7111** | ✅ Meilleur modèle |
+| **Gradient Boosting Survival (Tuned)** | **0.7141** | ✅ Meilleur modèle |
+| Gradient Boosting Survival | 0.7111 | ✅ Testé |
 | Random Survival Forest | 0.7040 | ✅ Testé |
 | Baseline (Ridge) | 0.6537 | ✅ Référence |
 | KMeans Clustering | 0.6182 | ✅ Testé |
 | Challenge Winner | 0.7744 | 🎯 Objectif |
 
-> **Gap à combler**: -0.063 (~6%) pour atteindre le score du winner
+> **Gap à combler**: -0.060 (~6%) pour atteindre le score du winner
 
 ## 📋 Table des Matières
 
@@ -296,10 +297,10 @@ Voir **experiments.ipynb** pour les tests d'amélioration.
 
 | # | Expérience | Description | Status |
 |---|------------|-------------|--------|
-| 1 | Ensemble RSF + GBSA | Moyenne pondérée des deux modèles | 🧪 À tester |
-| 2 | GBSA Tuning | Grid search plus large (n_estimators, learning_rate, max_depth) | 🧪 À tester |
-| 3 | Plus de gènes | Augmenter TOP_GENES de 30 à 50 | 🧪 À tester |
-| 4 | Co-mutations | Features d'interaction gène-gène (ex: TP53 + RUNX1) | 🧪 À tester |
+| 1 | Ensemble RSF + GBSA | Moyenne pondérée des deux modèles | 🧪 Testé |
+| 2 | **GBSA Tuning** | Grid search plus large (n_estimators, learning_rate, max_depth) | ✅ **Meilleur (0.7141)** |
+| 3 | Plus de gènes | Augmenter TOP_GENES de 30 à 50 | 🧪 Testé |
+| 4 | Co-mutations | Features d'interaction gène-gène (ex: TP53 + RUNX1) | 🧪 Testé |
 
 ### Idées à explorer
 
@@ -315,7 +316,8 @@ Voir **experiments.ipynb** pour les tests d'amélioration.
 
 | Modèle | IPCW C-index | Gap vs Winner | Commentaire |
 |--------|--------------|---------------|-------------|
-| **Gradient Boosting Surv** | **0.7111** | -0.063 | ✅ Meilleur modèle |
+| **Gradient Boosting Surv (Tuned)** | **0.7141** | -0.060 | ✅ Meilleur modèle |
+| Gradient Boosting Surv | 0.7111 | -0.063 | Hyperparamètres par défaut |
 | Random Survival Forest | 0.7040 | -0.070 | Bon modèle de survie |
 | Baseline (Ridge) | 0.6537 | -0.121 | Ignore la censure |
 | KMeans Clustering | 0.6182 | -0.156 | Non-supervisé |
@@ -327,7 +329,8 @@ Voir **experiments.ipynb** pour les tests d'amélioration.
 Baseline      ████████████████████████████░░░░░░░░░░  0.6537
 KMeans        ████████████████████████░░░░░░░░░░░░░░  0.6182
 RSF           ████████████████████████████████░░░░░░  0.7040
-GBSA          █████████████████████████████████░░░░░  0.7111 ← Actuel
+GBSA          █████████████████████████████████░░░░░  0.7111
+GBSA Tuned    █████████████████████████████████░░░░░  0.7141 ← Actuel
 Winner        ████████████████████████████████████░░  0.7744 ← Objectif
 ```
 
@@ -347,6 +350,23 @@ Winner        ██████████████████████
 
 ## 📝 Historique des Modifications
 
+### Version 2.2 (Janvier 2026) — GBSA Tuned
+
+#### Nouveautés
+
+- ✅ **GBSA Tuned** — Grid search étendu, nouveau meilleur score (0.7141)
+- ✅ **Hyperparamètres optimaux** — n_estimators=300, learning_rate=0.1, max_depth=3
+- ✅ **experiments_1.ipynb** — Tests systématiques (ensemble, tuning, features)
+
+#### Scores atteints
+
+| Étape | Score | Amélioration |
+|-------|-------|--------------||
+| v1 Baseline | 0.6537 | — |
+| v2 RSF | 0.7040 | +0.050 |
+| v2.1 GBSA | 0.7111 | +0.007 |
+| v2.2 GBSA Tuned | **0.7141** | +0.003 |
+
 ### Version 2.1 (Janvier 2026) — Gradient Boosting + Expériences
 
 #### Nouveautés
@@ -355,14 +375,6 @@ Winner        ██████████████████████
 - ✅ **experiments.ipynb** — Notebook dédié aux expériences
 - ✅ **Optimisation Grid Search** — Réduction de 72 à 16 fits, mode fast
 - ✅ **Fix alignement colonnes** — Correction du bug KeyError sur test set
-
-#### Scores atteints
-
-| Étape | Score | Amélioration |
-|-------|-------|--------------|
-| v1 Baseline | 0.6537 | — |
-| v2 RSF | 0.7040 | +0.050 |
-| v2.1 GBSA | **0.7111** | +0.007 |
 
 ### Version 2.0 — Restructuration complète
 
@@ -493,5 +505,5 @@ Ce projet est développé dans le cadre du QRT Data Challenge 2024 en partenaria
 <p align="center">
   <b>QRT Data Challenge 2024</b><br>
   En partenariat avec l'Institut Gustave Roussy<br><br>
-  <i>Score actuel : 0.7111 | Objectif : 0.7744</i>
+  <i>Score actuel : 0.7141 | Objectif : 0.7744</i>
 </p>

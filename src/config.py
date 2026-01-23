@@ -1,3 +1,6 @@
+# ============================================================
+# src/config.py
+# ============================================================
 """
 Configuration and constants for the Leukemia Risk Prediction project.
 """
@@ -41,8 +44,10 @@ CLINICAL_CAT_COLS: List[str] = ["CENTER"]
 CLINICAL_TEXT_COL = "CYTOGENETICS"
 
 # Molecular columns
-MOLECULAR_COLS = ["ID", "CHR", "START", "END", "REF", "ALT", 
-                  "GENE", "PROTEIN_CHANGE", "EFFECT", "VAF", "DEPTH"]
+MOLECULAR_COLS = [
+    "ID", "CHR", "START", "END", "REF", "ALT",
+    "GENE", "PROTEIN_CHANGE", "EFFECT", "VAF", "DEPTH"
+]
 
 # =========================================================
 # Model parameters
@@ -54,13 +59,20 @@ TAU_YEARS = 7.0  # Truncation time for IPCW C-index
 N_SPLITS_CV = 3
 TEST_SIZE = 0.2
 
+# =========================================================
 # Feature engineering
-TOP_GENES = 60      # Number of top genes to use as features
-TOP_EFFECTS = 25    # Number of top mutation effects to use
-TFIDF_MAX_FEATURES = 1500
-SVD_COMPONENTS = 50
+# =========================================================
+TOP_GENES = 60      # Number of top genes to use as features (selected on TRAIN only)
+TOP_EFFECTS = 25    # Number of top mutation effects to use (selected on TRAIN only)
 
+# Cytogenetics text encoding
+# NOTE: ISCN is best captured with char n-grams
+TFIDF_MAX_FEATURES = 10000
+SVD_COMPONENTS = 150
+
+# =========================================================
 # Random Survival Forest default parameters
+# =========================================================
 RSF_DEFAULT_PARAMS = {
     "n_estimators": 300,
     "min_samples_leaf": 10,
@@ -69,12 +81,9 @@ RSF_DEFAULT_PARAMS = {
 }
 
 # Hyperparameter grid for RSF tuning (REDUCED for speed)
-# Full grid: 2×3×2×2 = 24 combinations × 3 folds = 72 fits
-# Fast grid: 2×2×1×2 = 8 combinations × 2 folds = 16 fits
 RSF_PARAM_GRID = {
-    "n_estimators": [200, 400],      # Reduced from [300, 600]
-    "min_samples_leaf": [10, 20],     # Reduced from [5, 10, 20]
-    "min_samples_split": [10],        # Fixed (less important)
-
+    "n_estimators": [200, 400],
+    "min_samples_leaf": [10, 20],
+    "min_samples_split": [10],
     "max_features": ["sqrt", 0.5],
 }
